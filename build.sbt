@@ -8,7 +8,9 @@ lazy val flinkVersion = "1.9.0"
 
 libraryDependencies ++= Seq(
   "org.apache.flink"          %% "flink-scala"                % flinkVersion,
-  "org.apache.flink"          %% "flink-streaming-scala"      % flinkVersion
+  "org.apache.flink"          %% "flink-streaming-scala"      % flinkVersion,
+  "org.scalatest" %% "scalatest" % "3.0.8" % "test",
+  "org.scalacheck" %% "scalacheck" % "1.14.2" % "test"
 )
 
 enablePlugins(JmhPlugin)

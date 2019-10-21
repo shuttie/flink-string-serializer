@@ -17,31 +17,33 @@ class StringSerializerBenchmark {
 
   var buf: ByteArrayOutputStream = _
   var stream: DataOutputView = _
+  @Param(Array("ascii", "ascii-long", "utf1", "utf2", "utf3", "emoji", "random"))
+  var stringType: String = _
+
   var item: String = _
-  val chars = "qwertyuiopasdfghklzxcvbnm".toCharArray
   @Setup(Level.Iteration)
   def setup = {
-    buf = new ByteArrayOutputStream(32)
+    buf = new ByteArrayOutputStream(128)
     stream = new DataOutputViewStreamWrapper(buf)
-    item = (0 to 16).map(_ => chars(Random.nextInt(chars.length))).mkString("")
+    item = StringGen.makeString(stringType)
   }
 
   @Benchmark
-  def measureOld = {
+  def serializeDefault = {
     buf.reset()
     StringValue.writeString(item, stream)
     buf.toByteArray
   }
 
   @Benchmark
-  def measureNew = {
+  def serializeImproved = {
     buf.reset()
-    StringSerializerImpl.writeString(item, stream)
+    StringUtils.writeString(item, stream)
     buf.toByteArray
   }
 
   @Benchmark
-  def measureJDK = {
+  def serializeJDK = {
     buf.reset()
     stream.writeUTF(item)
     buf.toByteArray
