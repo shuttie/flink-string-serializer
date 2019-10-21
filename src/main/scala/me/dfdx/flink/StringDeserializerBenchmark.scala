@@ -52,9 +52,10 @@ class StringDeserializerBenchmark {
     StringValue.readString(defaultInStream)
   }
 
-//  @Benchmark
-//  def deresializeImproved = {
-//
-//  }
+  @Benchmark
+  def deresializeImproved = {
+    defaultInBuf.reset()
+    StringUtils.readString(defaultInStream)
+  }
 
 }

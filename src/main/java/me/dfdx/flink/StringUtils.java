@@ -1,18 +1,14 @@
 package me.dfdx.flink;
 
 import java.io.DataInput;
-import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.IOException;
 
 public class StringUtils {
 
-    private static final int HIGH_BIT = 0x1 << 7;
-
-    private static final int VARLEN7 = 0x1 << 7;
-    private static final int VARLEN14 = 0x1 << 14;
-    private static final int VARLEN21 = 0x1 << 21;
-    private static final int VARLEN28 = 0x1 << 28;
+    private static final int HIGH_BIT7 = 0x1 << 7;
+    private static final int HIGH_BIT14 = 0x1 << 14;
+    private static final int HIGH_BIT21 = 0x1 << 14;
 
     public static final void writeString(CharSequence cs, DataOutput out) throws IOException {
         if (cs != null) {
@@ -36,21 +32,26 @@ public class StringUtils {
                 throw new IllegalArgumentException("CharSequence is too long.");
             }
             // write the length, variable-length encoded
-            while (lenToWrite >= HIGH_BIT) {
-                buffer[position++] = (byte) (lenToWrite | HIGH_BIT);
+            while (lenToWrite >= HIGH_BIT7) {
+                buffer[position++] = (byte) (lenToWrite | HIGH_BIT7);
                 lenToWrite >>>= 7;
             }
             buffer[position++] = (byte) lenToWrite;
 
             // write the char data, variable length encoded
             for (int i = 0; i < strlen; i++) {
-                char c = cs.charAt(i);
+                int c = cs.charAt(i);
 
-                while (c >= HIGH_BIT) {
-                    buffer[position++] = (byte)(c | HIGH_BIT);
-                    c >>>= 7;
+                if (c < HIGH_BIT7) {
+                    buffer[position++] = (byte)c;
+                } else if (c < HIGH_BIT14) {
+                    buffer[position++] = (byte)(c | HIGH_BIT7);
+                    buffer[position++] = (byte)((c >>> 7));
+                } else {
+                    buffer[position++] = (byte)(c | HIGH_BIT7);
+                    buffer[position++] = (byte)((c >>> 7) | HIGH_BIT7);
+                    buffer[position++] = (byte)((c >>> 14));
                 }
-                buffer[position++] = (byte)(c | HIGH_BIT);
             }
             out.write(buffer, 0, position);
         } else {
@@ -66,11 +67,11 @@ public class StringUtils {
             return null;
         }
 
-        if (len >= HIGH_BIT) {
+        if (len >= HIGH_BIT7) {
             int shift = 7;
             int curr;
             len = len & 0x7f;
-            while ((curr = in.readUnsignedByte()) >= HIGH_BIT) {
+            while ((curr = in.readUnsignedByte()) >= HIGH_BIT7) {
                 len |= (curr & 0x7f) << shift;
                 shift += 7;
             }
@@ -80,25 +81,20 @@ public class StringUtils {
         // subtract one for the null length
         len -= 1;
 
-        final char[] data = new char[len];
-        int utflen = 0;
-        for (int i=0; i< len; i++) {
-            int c = in.readUnsignedByte();
-            if (c >= HIGH_BIT) {
+//        byte[] buf = new byte[len];
+//        in.readFully(buf);
 
-            }
-        }
-        final byte[] buffer = new byte[len];
+        final char[] data = new char[len];
 
         for (int i = 0; i < len; i++) {
             int c = in.readUnsignedByte();
-            if (c < HIGH_BIT) {
+            if (c < HIGH_BIT7) {
                 data[i] = (char) c;
             } else {
                 int shift = 7;
                 int curr;
                 c = c & 0x7f;
-                while ((curr = in.readUnsignedByte()) >= HIGH_BIT) {
+                while ((curr = in.readUnsignedByte()) >= HIGH_BIT7) {
                     c |= (curr & 0x7f) << shift;
                     shift += 7;
                 }
