@@ -11,6 +11,9 @@ import org.openjdk.jmh.annotations._
 @State(Scope.Benchmark)
 @BenchmarkMode(Array(Mode.AverageTime))
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
+@Fork(value = 1)
+@Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
+@Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
 class StringDeserializerBenchmark {
 
   @Param(Array("ascii", "ascii-long", "utf1", "utf2", "utf3", "emoji", "random"))
@@ -53,7 +56,7 @@ class StringDeserializerBenchmark {
   }
 
   @Benchmark
-  def deresializeImproved = {
+  def deserializeImproved = {
     defaultInBuf.reset()
     StringUtils.readString(defaultInStream)
   }

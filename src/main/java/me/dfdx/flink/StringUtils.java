@@ -81,26 +81,53 @@ public class StringUtils {
         // subtract one for the null length
         len -= 1;
 
-//        byte[] buf = new byte[len];
-//        in.readFully(buf);
+        /* as we have no idea about byte-length of the serialized string, we cannot fully
+         * read it into memory buffer. But we can do it in an optimistic way:
+         * 1. In a happy case when the string is an us-ascii one, then byte_len == char_len
+         * 2. If we spot at least one character with code >= 127, then we fall back to the old
+         * unbuffered iterative approach.
+         */
+
+        // happily assume that the string is an 7 bit us-ascii one
+        byte[] buf = new byte[len];
+        in.readFully(buf);
 
         final char[] data = new char[len];
+        int charPosition = 0;
 
-        for (int i = 0; i < len; i++) {
-            int c = in.readUnsignedByte();
-            if (c < HIGH_BIT7) {
-                data[i] = (char) c;
-            } else {
+        int bytePosition = 0;
+        while (charPosition < len) {
+            int c;
+            if (bytePosition == buf.length) {
+                // need to expand the buffer
+                buf = new byte[len - charPosition];
+                in.readFully(buf);
+                bytePosition = 0;
+            }
+            c = buf[bytePosition++] & 255;
+            if (c >= HIGH_BIT7) {
                 int shift = 7;
                 int curr;
                 c = c & 0x7f;
-                while ((curr = in.readUnsignedByte()) >= HIGH_BIT7) {
+                if (bytePosition == buf.length) {
+                    // need to expand the buffer
+                    buf = new byte[len - charPosition];
+                    in.readFully(buf);
+                    bytePosition = 0;
+                }
+                while ((curr = buf[bytePosition++] & 255) >= HIGH_BIT7) {
                     c |= (curr & 0x7f) << shift;
                     shift += 7;
+                    if (bytePosition == buf.length) {
+                        // need to expand the buffer
+                        buf = new byte[len - charPosition];
+                        in.readFully(buf);
+                        bytePosition = 0;
+                    }
                 }
                 c |= curr << shift;
-                data[i] = (char) c;
             }
+            data[charPosition++] = (char) c;
         }
 
         return new String(data, 0, len);

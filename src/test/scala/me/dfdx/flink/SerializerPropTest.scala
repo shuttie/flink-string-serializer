@@ -15,7 +15,15 @@ class SerializerPropTest extends PropSpec with Matchers with ScalaCheckPropertyC
   val stringGenerator = Gen.choose(1, 100).map(len => Random.nextString(len))
   implicit val arbString = Arbitrary(stringGenerator)
 
-  property("encode ascii") {
+  property("ensure that original and new impl produce the same byte sequences") {
+    forAll { (str: String) => {
+      val original = Encoded(StringValue.writeString(str, _))
+      val modified = Encoded(StringUtils.writeString(str, _))
+      original.toList shouldBe modified.toList
+    }}
+  }
+
+  property("ensure that new impl can read any byte sequence made by the original impl") {
     forAll { (str: String) => {
       val original = Encoded(StringValue.writeString(str, _))
       val modified = Encoded(StringUtils.writeString(str, _))
