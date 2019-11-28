@@ -97,10 +97,11 @@ public class StringUtils {
 
         int bytePosition = 0;
         while (charPosition < len) {
+            int remainingBytesEstimation = len - charPosition;
             int c;
             if (bytePosition == buf.length) {
                 // need to expand the buffer
-                buf = new byte[len - charPosition];
+                buf = new byte[remainingBytesEstimation];
                 in.readFully(buf);
                 bytePosition = 0;
             }
@@ -111,16 +112,18 @@ public class StringUtils {
                 c = c & 0x7f;
                 if (bytePosition == buf.length) {
                     // need to expand the buffer
-                    buf = new byte[len - charPosition];
+                    buf = new byte[remainingBytesEstimation];
                     in.readFully(buf);
                     bytePosition = 0;
                 }
+                //int bytesRead = 1;
                 while ((curr = buf[bytePosition++] & 255) >= HIGH_BIT7) {
+                    //bytesRead++;
                     c |= (curr & 0x7f) << shift;
                     shift += 7;
                     if (bytePosition == buf.length) {
                         // need to expand the buffer
-                        buf = new byte[len - charPosition];
+                        buf = new byte[remainingBytesEstimation];
                         in.readFully(buf);
                         bytePosition = 0;
                     }
@@ -129,7 +132,7 @@ public class StringUtils {
             }
             data[charPosition++] = (char) c;
         }
-
+        assert (bytePosition == buf.length);
         return new String(data, 0, len);
     }
 
