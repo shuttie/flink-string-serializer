@@ -94,38 +94,41 @@ public class StringUtils {
 
         final char[] data = new char[len];
         int charPosition = 0;
-
+        int bufSize = len;
         int bytePosition = 0;
         while (charPosition < len) {
             int remainingBytesEstimation = len - charPosition;
             int c;
-            if (bytePosition == buf.length) {
+            if (bytePosition == bufSize) {
                 // need to expand the buffer
-                buf = new byte[remainingBytesEstimation];
-                in.readFully(buf);
+                //buf = new byte[remainingBytesEstimation];
+                in.readFully(buf, 0, remainingBytesEstimation);
                 bytePosition = 0;
+                bufSize = remainingBytesEstimation;
             }
             c = buf[bytePosition++] & 255;
             if (c >= HIGH_BIT7) {
                 int shift = 7;
                 int curr;
                 c = c & 0x7f;
-                if (bytePosition == buf.length) {
+                if (bytePosition == bufSize) {
                     // need to expand the buffer
-                    buf = new byte[remainingBytesEstimation];
-                    in.readFully(buf);
+                    //buf = new byte[remainingBytesEstimation];
+                    in.readFully(buf, 0, remainingBytesEstimation);
                     bytePosition = 0;
+                    bufSize = remainingBytesEstimation;
                 }
                 //int bytesRead = 1;
                 while ((curr = buf[bytePosition++] & 255) >= HIGH_BIT7) {
                     //bytesRead++;
                     c |= (curr & 0x7f) << shift;
                     shift += 7;
-                    if (bytePosition == buf.length) {
+                    if (bytePosition == bufSize) {
                         // need to expand the buffer
-                        buf = new byte[remainingBytesEstimation];
-                        in.readFully(buf);
+                        //buf = new byte[remainingBytesEstimation];
+                        in.readFully(buf, 0, remainingBytesEstimation);
                         bytePosition = 0;
+                        bufSize = remainingBytesEstimation;
                     }
                 }
                 c |= curr << shift;

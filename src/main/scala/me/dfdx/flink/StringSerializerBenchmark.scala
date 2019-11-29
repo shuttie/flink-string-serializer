@@ -17,15 +17,18 @@ class StringSerializerBenchmark {
 
   var buf: ByteArrayOutputStream = _
   var stream: DataOutputView = _
-  @Param(Array("ascii", "ascii-long", "utf1", "utf2", "utf3", "emoji", "random"))
+  @Param(Array("ascii", "russian", "chinese"))
   var stringType: String = _
+
+  @Param(Array("1", "4", "8", "16", "32", "64", "128"))
+  var length: String = _
 
   var item: String = _
   @Setup(Level.Iteration)
   def setup = {
     buf = new ByteArrayOutputStream(128)
     stream = new DataOutputViewStreamWrapper(buf)
-    item = StringGen.makeString(stringType)
+    item = StringGen.fill(StringGen.symbolMap(stringType), length.toInt)
   }
 
   @Benchmark

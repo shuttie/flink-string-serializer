@@ -16,8 +16,11 @@ import org.openjdk.jmh.annotations._
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
 class StringDeserializerBenchmark {
 
-  @Param(Array("ascii", "ascii-long", "utf1", "utf2", "utf3", "emoji", "random"))
+  @Param(Array("ascii", "russian", "chinese"))
   var stringType: String = _
+
+  @Param(Array("1", "4", "8", "16", "32", "64", "128"))
+  var length: String = _
 
   var item: String = _
   var jdkInBuf: ByteArrayInputStream = _
@@ -27,7 +30,7 @@ class StringDeserializerBenchmark {
   var defaultInStream: DataInput = _
   @Setup
   def setup = {
-    item = StringGen.makeString(stringType)
+    item = StringGen.fill(StringGen.symbolMap(stringType), length.toInt)
     // jdk setup
     val jdkBuf = new ByteArrayOutputStream(128)
     val jdkStream = new DataOutputViewStreamWrapper(jdkBuf)
