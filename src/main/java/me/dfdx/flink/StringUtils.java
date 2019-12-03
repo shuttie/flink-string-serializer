@@ -15,45 +15,71 @@ public class StringUtils {
             // the length we write is offset by one, because a length of zero indicates a null value
             int position = 0;
             int strlen = cs.length();
-            int buflen = 5; // worst-case when we have giant string with 5 bytes variable-length encoding
-            for (int i = 0; i < strlen; i++) {
-                char c = cs.charAt(i);
-                if ((c >= 0x0001) && (c <= 0x007F)) {
-                    buflen++;
-                } else if (c > 0x07FF) {
-                    buflen += 3;
-                } else {
-                    buflen += 2;
-                }
-            }
-            byte[] buffer = new byte[buflen];
-            int lenToWrite = strlen+1;
+            int lenToWrite = strlen + 1;
             if (lenToWrite < 0) {
                 throw new IllegalArgumentException("CharSequence is too long.");
             }
-            // write the length, variable-length encoded
-            while (lenToWrite >= HIGH_BIT7) {
-                buffer[position++] = (byte) (lenToWrite | HIGH_BIT7);
-                lenToWrite >>>= 7;
-            }
-            buffer[position++] = (byte) lenToWrite;
-
-            // write the char data, variable length encoded
-            for (int i = 0; i < strlen; i++) {
-                int c = cs.charAt(i);
-
-                if (c < HIGH_BIT7) {
-                    buffer[position++] = (byte)c;
-                } else if (c < HIGH_BIT14) {
-                    buffer[position++] = (byte)(c | HIGH_BIT7);
-                    buffer[position++] = (byte)((c >>> 7));
-                } else {
-                    buffer[position++] = (byte)(c | HIGH_BIT7);
-                    buffer[position++] = (byte)((c >>> 7) | HIGH_BIT7);
-                    buffer[position++] = (byte)((c >>> 14));
+            if (strlen < 6) {
+                // fallback code for short strings, as buffer allocation is too expensive here
+                // write the length, variable-length encoded
+                while (lenToWrite >= HIGH_BIT7) {
+                    out.write(lenToWrite | HIGH_BIT7);
+                    lenToWrite >>>= 7;
                 }
+                out.write(lenToWrite);
+
+                // write the char data, variable length encoded
+                for (int i = 0; i < cs.length(); i++) {
+                    int c = cs.charAt(i);
+                    if (c < HIGH_BIT7) {
+                        out.write((byte) c);
+                    } else if (c < HIGH_BIT14) {
+                        out.write((byte) (c | HIGH_BIT7));
+                        out.write((byte) ((c >>> 7)));
+                    } else {
+                        out.write((byte) (c | HIGH_BIT7));
+                        out.write((byte) ((c >>> 7) | HIGH_BIT7));
+                        out.write((byte) ((c >>> 14)));
+                    }
+                }
+
+            } else {
+                int buflen = 5; // worst-case when we have giant string with 5 bytes variable-length encoding
+                for (int i = 0; i < strlen; i++) {
+                    char c = cs.charAt(i);
+                    if ((c >= 0x0001) && (c <= 0x007F)) {
+                        buflen++;
+                    } else if (c > 0x07FF) {
+                        buflen += 3;
+                    } else {
+                        buflen += 2;
+                    }
+                }
+                byte[] buffer = new byte[buflen];
+                // write the length, variable-length encoded
+                while (lenToWrite >= HIGH_BIT7) {
+                    buffer[position++] = (byte) (lenToWrite | HIGH_BIT7);
+                    lenToWrite >>>= 7;
+                }
+                buffer[position++] = (byte) lenToWrite;
+
+                // write the char data, variable length encoded
+                for (int i = 0; i < strlen; i++) {
+                    int c = cs.charAt(i);
+
+                    if (c < HIGH_BIT7) {
+                        buffer[position++] = (byte) c;
+                    } else if (c < HIGH_BIT14) {
+                        buffer[position++] = (byte) (c | HIGH_BIT7);
+                        buffer[position++] = (byte) ((c >>> 7));
+                    } else {
+                        buffer[position++] = (byte) (c | HIGH_BIT7);
+                        buffer[position++] = (byte) ((c >>> 7) | HIGH_BIT7);
+                        buffer[position++] = (byte) ((c >>> 14));
+                    }
+                }
+                out.write(buffer, 0, position);
             }
-            out.write(buffer, 0, position);
         } else {
             out.write(0);
         }
