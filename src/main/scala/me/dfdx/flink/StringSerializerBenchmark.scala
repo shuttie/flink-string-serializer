@@ -23,7 +23,7 @@ class StringSerializerBenchmark {
   var stringType: String = _
 
   //@Param(Array("1", "4", "8", "16", "32", "64", "128"))
-  @Param(Array("1", "2", "3", "4", "5", "6", "7"))
+  @Param(Array("1", "2", "4", "8", "16", "32"))
   var length: String = _
 
   var item: String = _

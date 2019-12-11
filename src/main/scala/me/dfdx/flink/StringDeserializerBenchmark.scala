@@ -16,10 +16,10 @@ import org.openjdk.jmh.annotations._
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
 class StringDeserializerBenchmark {
 
-  @Param(Array("ascii", "russian", "chinese"))
+  @Param(Array("ascii"/*, "russian", "chinese"*/))
   var stringType: String = _
 
-  @Param(Array("1", "4", "8", "16", "32", "64", "128"))
+  @Param(Array("1", "2", "4", "8", "16", "32"))
   var length: String = _
 
   var item: String = _
@@ -46,11 +46,11 @@ class StringDeserializerBenchmark {
     defaultInStream = new DataInputViewStreamWrapper(defaultInBuf)
   }
 
-  @Benchmark
-  def deserializeJDK = {
-    jdkInBuf.reset()
-    jdkInStream.readUTF()
-  }
+//  @Benchmark
+//  def deserializeJDK = {
+//    jdkInBuf.reset()
+//    jdkInStream.readUTF()
+//  }
 
   @Benchmark
   def deserializeDefault = {
