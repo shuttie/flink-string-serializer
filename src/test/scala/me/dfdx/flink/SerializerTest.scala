@@ -18,10 +18,17 @@ class SerializerTest extends FlatSpec with Matchers with Inspectors {
   )
 
   it should "work with mixed strings" in {
-    val str = new String(Array(32000.toChar, 32000.toChar, 32000.toChar))
+    val str = new String(Array.fill(33)(32000.toChar))
     val original = Encoded(StringValue.writeString(str, _))
     val decoded = Decoded(original, StringUtils.readString)
     decoded shouldBe str
+  }
+
+  it should "write ascii" in {
+    val str = new String((0 to 250).map(_.toChar).toArray)
+    val a = Encoded(StringValue.writeString(str, _)).toList
+    val b = Encoded(StringUtils.writeString(str, _)).toList
+    a shouldBe b
   }
 
   forAll(cases.toList) { pair => {

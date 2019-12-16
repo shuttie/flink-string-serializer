@@ -29,7 +29,7 @@ class StringSerializerBenchmark {
   var item: String = _
   @Setup(Level.Iteration)
   def setup = {
-    buf = new ByteArrayOutputStream(128)
+    buf = new ByteArrayOutputStream(4096)
     stream = new DataOutputViewStreamWrapper(buf)
     item = StringGen.fill(StringGen.symbolMap(stringType), length.toInt)
   }
